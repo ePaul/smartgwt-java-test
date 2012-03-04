@@ -57,26 +57,62 @@ public class JSOHelper {
     public static boolean isJSO(Object object) {
         return object instanceof JavaScriptObject;
     }
+
+    private static Map<JavaScriptObject, Map<String, Object>> attributes;
+    private static Map<JavaScriptObject, Object> arrayEntries;
+
+    static {
+	attributes = new WeakHashMap<JavaScriptObject, Map<String, Object>>();
+	arrayEntries = new WeakHashMap<JavaScriptObject, Object>();
+    }
+
+    private static Map<String, Object> getAttributes(JavaScriptObject obj) {
+	Map<String, Object> map = attributes.get(obj);
+	if(map == null) {
+	    map = new HashMap<String, Object>();
+	    attributes.put(obj, map);
+	}
+	return map;
+    }
+
     
-    public static native String getAttribute(JavaScriptObject elem, String attr) /*-{
+    public static String getAttribute(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret === undefined || ret == null) ? null : String(ret);
-    }-*/;
+    }-*/
+    {
+	Object value = getAttributes(elem).get(attr);
+	if(value != null) {
+	    return String.valueOf(value);
+	}
+	return null;
+    }
 
-    public static native void setAttribute(JavaScriptObject elem, String attr, String value) /*-{
+    public static void setAttribute(JavaScriptObject elem, String attr, String value) /*-{
 	    elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
-    public static native JavaScriptObject getAttributeAsJavaScriptObject(JavaScriptObject elem, String attr) /*-{
+    public static JavaScriptObject getAttributeAsJavaScriptObject(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret === undefined) ? null : ret;
-    }-*/;
+    }-*/
+    {
+	return (JavaScriptObject)getAttributes(elem).get(attr);
+    }
 
-    public static native JavaScriptObject[] getAttributeAsJavaScriptObjectArray(JavaScriptObject elem, String attr) /*-{        
+    public static JavaScriptObject[] getAttributeAsJavaScriptObjectArray(JavaScriptObject elem, String attr) /*-{        
         var arrayJS = elem[attr];
 	    return (arrayJS === undefined) ? null : @com.smartgwt.client.util.JSOHelper::toArray(Lcom/google/gwt/core/client/JavaScriptObject;)(arrayJS);
-    }-*/;
+    }-*/
+    {
+	// TODO: do we need some conversion here?
+	return (JavaScriptObject[])getAttributes(elem).get(attr);
+    }
 
+    // TODO: how could one implement this? Where is it used?
     public static JavaScriptObject[] toArray(JavaScriptObject array) {
         //handle case where a ResultSet is passed
     	if (com.smartgwt.client.data.ResultSet.isResultSet(array)) {
@@ -95,6 +131,7 @@ public class JSOHelper {
     	
     }-*/;
 
+    // TODO: how could one implement this? Where is it used?
     public static native boolean isArray(JavaScriptObject jsObj)/*-{
         return $wnd.isc.isA.Array(jsObj);
     }-*/;
@@ -108,9 +145,12 @@ public class JSOHelper {
         return recs;
     }
 
-    public static native void setAttribute(JavaScriptObject elem, String attr, JavaScriptObject[] value) /*-{
+    public static void setAttribute(JavaScriptObject elem, String attr, JavaScriptObject[] value) /*-{
 	    elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
     public static void setAttribute(JavaScriptObject elem, String attr, int[] values) {
         setAttribute(elem, attr, JSOHelper.convertToJavaScriptArray(values));
@@ -151,17 +191,28 @@ public class JSOHelper {
         setAttribute(elem, attr, JSOHelper.convertToJavaScriptArray(values));
     }
 
-    public static native void setAttribute(JavaScriptObject elem, String attr, Object value) /*-{
+    public static void setAttribute(JavaScriptObject elem, String attr, Object value) /*-{
         elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
-    public static native void setAttribute(JavaScriptObject elem, String attr, JavaScriptObject value) /*-{
+    public static void setAttribute(JavaScriptObject elem, String attr, JavaScriptObject value) /*-{
 	    elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
-    public static native void setAttribute(JavaScriptObject elem, String attr, int value) /*-{
+
+    public static void setAttribute(JavaScriptObject elem, String attr, int value) /*-{
 	    elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
+
 
     public static void setAttribute(JavaScriptObject elem, String attr, long value) {
         setAttribute(elem, attr, new Double(value).doubleValue());
@@ -200,31 +251,48 @@ public class JSOHelper {
         }
     }
 
-    public static native void setNullAttribute(JavaScriptObject elem, String attr) /*-{
+    public static void setNullAttribute(JavaScriptObject elem, String attr) /*-{
 	    elem[attr] = null;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, null);
+    }
 
-    public static native void deleteAttribute(JavaScriptObject elem, String attr) /*-{
+    public static void deleteAttribute(JavaScriptObject elem, String attr) /*-{
 	      delete elem[attr];
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).remove(attr);
+    }
 
-    public static native void deleteAttributeIfExists(JavaScriptObject elem, String attr) /*-{
+    public static void deleteAttributeIfExists(JavaScriptObject elem, String attr) /*-{
           var undef;
 	      if (elem[attr] !== undef) delete elem[attr];
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).remove(attr);
+    }
 
-    public static native void setAttribute(JavaScriptObject elem, String attr, boolean value) /*-{
+    public static void setAttribute(JavaScriptObject elem, String attr, boolean value) /*-{
 	    elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
-    public static native void setAttribute(JavaScriptObject elem, String attr, float value) /*-{
+    public static void setAttribute(JavaScriptObject elem, String attr, float value) /*-{
 	    elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
-
-    public static native void setAttribute(JavaScriptObject elem, String attr, double value) /*-{
+    public static void setAttribute(JavaScriptObject elem, String attr, double value) /*-{
 	    elem[attr] = value;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
     public static native void setAttribute(JavaScriptObject elem, String attr, Function handler) /*-{
 	    elem[attr] = function() {
@@ -246,22 +314,31 @@ public class JSOHelper {
         elem[attr] = dateJS;
     }-*/;
 
-    public static native void setObjectAttribute(JavaScriptObject elem, String attr, Object object) /*-{
+    public static void setObjectAttribute(JavaScriptObject elem, String attr, Object object) /*-{
             elem[attr] = object;
-    }-*/;
+    }-*/
+    {
+	getAttributes(elem).put(attr, value);
+    }
 
-
-    public static native Element getAttributeAsElement(JavaScriptObject elem, String attr) /*-{
+    public static Element getAttributeAsElement(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret === undefined) ? null : ret;
-    }-*/;
+    }-*/
+    {
+	return (Element)getAttributes(elem).get(attr);
+    }
 
-    public static native Integer getAttributeAsInt(JavaScriptObject elem, String attr) /*-{
+    public static Integer getAttributeAsInt(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret === undefined || ret == null) ? null : @com.smartgwt.client.util.JSOHelper::toInteger(I)(ret);
-    }-*/;
+    }-*/
+    {
+	// TODO: do we need conversion here?
+	return (Integer)getAttributes(elem).get(attr);
+    }
 
-    public static native Double getAttributeAsDouble(JavaScriptObject elem, String attr) /*-{
+    public static Double getAttributeAsDouble(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    if (ret === undefined || ret == null) {
 	        return null;
@@ -272,17 +349,29 @@ public class JSOHelper {
 	            return  @com.smartgwt.client.util.JSOHelper::toDouble(D)(ret);
             }
         }
-    }-*/;
+    }-*/
+    {
+	// TODO: do we need conversion here?
+	return (Double)getAttributes(elem).get(attr);
+    }
 
-    public static native Date getAttributeAsDate(JavaScriptObject elem, String attr) /*-{
+    public static Date getAttributeAsDate(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret === undefined || ret == null) ? null: @com.smartgwt.client.util.JSOHelper::toDate(D)(ret.getTime());
-    }-*/;
+    }-*/
+    {
+	// TODO: do we need conversion here?
+	return (Date)getAttributes(elem).get(attr);
+    }
 
-    public static native Float getAttributeAsFloat(JavaScriptObject elem, String attr) /*-{
+    public static Float getAttributeAsFloat(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret === undefined || ret == null) ? null : @com.smartgwt.client.util.JSOHelper::toFloat(F)(ret);
-    }-*/;
+    }-*/
+    {
+	// TODO: do we need conversion here?
+	return (Date)getAttributes(elem).get(attr);
+    }
 
     public static int[] getAttributeAsIntArray(JavaScriptObject elem, String attr) {
         int[] rtn = null;
@@ -326,38 +415,63 @@ public class JSOHelper {
         return rtn;
     }
 
-    public static native int getJavaScriptObjectArraySize(JavaScriptObject elem) /*-{
+    public static int getJavaScriptObjectArraySize(JavaScriptObject elem) /*-{
         var length;
 	    if (elem) length = elem.length;
 	    if (length == null) length = 0;
 	    return length;
-    }-*/;
+    }-*/
+    {
+	Object array = arrayEntries.get(elem);
+	if(array == null)
+	    return 0;
+	return Array.getLength(array);
+    }
 
-    public static native int getIntValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
+    public static int getIntValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
 	    return elem[i];
-    }-*/;
+    }-*/
+    {
+	return ((int[])arrayEntries.get(elem))[i];
+    }
 
-    public static native double getDoubleValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
+    public static double getDoubleValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
 	    return elem[i];
-    }-*/;
+    }-*/
+    {
+	return ((double[])arrayEntries.get(elem))[i];
+    }
 
-    public static native String getStringValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
+    public static String getStringValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
 	    return elem[i];
-    }-*/;
+    }-*/
+    {
+	return ((String[])arrayEntries.get(elem))[i];
+    }
 
-    public static native JavaScriptObject getValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
+    public static JavaScriptObject getValueFromJavaScriptObjectArray(JavaScriptObject elem, int i) /*-{
 	    return elem[i];
-    }-*/;
+    }-*/
+    {
+	return ((JavaScriptObject[])arrayEntries.get(elem))[i];
+    }
 
-    public static native boolean getAttributeAsBoolean(JavaScriptObject elem, String attr) /*-{
+    public static boolean getAttributeAsBoolean(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret == null || ret === undefined) ? false : ret;
-    }-*/;
+    }-*/
+    {
+	Object val = getAttributes(elem).get(attr);
+	return val != null && ((Boolean)val).booleanValue();
+    }
 
-    public static native Object getAttributeAsObject(JavaScriptObject elem, String attr) /*-{
+    public static Object getAttributeAsObject(JavaScriptObject elem, String attr) /*-{
 	    var ret = elem[attr];
 	    return (ret === undefined) ? null : ret;
-    }-*/;
+    }-*/
+    {
+	return getAttributes(elem).get(attr);
+    }
 
     public static Map getAttributeAsMap(JavaScriptObject elem, String attr) {
 	    JavaScriptObject value = getAttributeAsJavaScriptObject(elem, attr);
@@ -394,6 +508,7 @@ public class JSOHelper {
         return result;
     }
 
+    // TODO
     private static native JavaScriptObject newJSArray(int length) /*-{
 	    if (length < 0) {
 	        return $wnd.Array.create();
@@ -406,19 +521,31 @@ public class JSOHelper {
 
     public static native int arrayLength(JavaScriptObject array) /*-{
 	    return array.length;
-    }-*/;
+    }-*/
+    {
+	return Array.getLength(arrayEntries.get(array));
+    }
 
-    public static native Object arrayGetObject(JavaScriptObject array, int index) /*-{
+    public static Object arrayGetObject(JavaScriptObject array, int index) /*-{
 	    return array[index];
-    }-*/;
+    }-*/
+    {
+	return ((Object[])arrayEntries.get(array))[index];
+    }
 
-    public static native void arraySet(JavaScriptObject array, int index, Object value) /*-{
+    public static void arraySet(JavaScriptObject array, int index, Object value) /*-{
 	    array[index] = value;
-    }-*/;
+    }-*/
+    {
+	return ((Object[])arrayEntries.get(array))[index] = value;
+    }
 
     public static native void arraySet(JavaScriptObject array, int index, JavaScriptObject value) /*-{
 	    array[index] = value;
-    }-*/;
+    }-*/
+    {
+	return ((Object[])arrayEntries.get(array))[index] = value;
+    }
 
     /**
      * This is used to access Element array as JavaScriptObject
@@ -494,13 +621,7 @@ public class JSOHelper {
      * @throws IllegalArgumentException if unable to convert pass JavaScript object to a map
      */
     public static Map convertToMap(JavaScriptObject jsObj, boolean listAsArray) {
-    	Object javaObj = convertToJava(jsObj, listAsArray);
-    	if (javaObj instanceof Map) {
-    		return (Map) javaObj;
-    	} else {
-    		throw new IllegalArgumentException("convertToMap - unable to convert JavaScript object passed in to a Map"
-    				+ SC.echo(jsObj));
-    	}
+	return new HashMap<String, Object>(getAttributes(jsObj));
     }
 
     /**
@@ -725,71 +846,119 @@ public class JSOHelper {
         array[index] = dateJS;
     }-*/;
 
-    public static native void setArrayValue(JavaScriptObject array, int index, String value) /*-{
+    public static void setArrayValue(JavaScriptObject array, int index, String value) /*-{
         array[index] = value;
-    }-*/;
+    }-*/
+    {
+	((String[])arrayEntries.get(array))[index] = value;
+    }
 
-    public static native void setArrayValue(JavaScriptObject array, int index, double value) /*-{
+    public static void setArrayValue(JavaScriptObject array, int index, double value) /*-{
         array[index] = value;
-    }-*/;
+    }-*/
+    {
+	((double[])arrayEntries.get(array))[index] = value;
+    }
 
     public static void setArrayValue(JavaScriptObject array, int index, long value) {
         Double doubleValue = new Double(value);
         setArrayValue(array, index, doubleValue.doubleValue());
     }
 
-    public static native void setArrayValue(JavaScriptObject array, int index, int value) /*-{
+    public static void setArrayValue(JavaScriptObject array, int index, int value) /*-{
         array[index] = value;
-    }-*/;
+    }-*/
+    {
+	((int[])arrayEntries.get(array))[index] = value;
+    }
 
-    public static native void setArrayValue(JavaScriptObject array, int index, float value) /*-{
+    public static void setArrayValue(JavaScriptObject array, int index, float value) /*-{
         array[index] = value;
-    }-*/;
+    }-*/
+    {
+	((float[])arrayEntries.get(array))[index] = value;
+    }
 
-    public static native void setArrayValue(JavaScriptObject array, int index, boolean value) /*-{
+    public static void setArrayValue(JavaScriptObject array, int index, boolean value) /*-{
         array[index] = value;
-    }-*/;
+    }-*/
+    {
+	((boolean[])arrayEntries.get(array))[index] = value;
+    }
 
-    public static native void setArrayValue(JavaScriptObject array, int index, JavaScriptObject value) /*-{
+    public static void setArrayValue(JavaScriptObject array, int index, JavaScriptObject value) /*-{
         array[index] = value;
-    }-*/;
+    }-*/
+    {
+	((JavaScriptObject[])arrayEntries.get(array))[index] = value;
+    }
 
-    public static native void setArrayValue(JavaScriptObject array, int index, Object value) /*-{
+    public static void setArrayValue(JavaScriptObject array, int index, Object value) /*-{
         array[index] = value;
-    }-*/;
+    }-*/
+    {
+	((Object[])arrayEntries.get(array))[index] = value;
+    }
 
-    public static native String getArrayValue(JavaScriptObject array, int index) /*-{
+    public static String getArrayValue(JavaScriptObject array, int index) /*-{
         var result = array[index];
         return (result == null || result === undefined) ? null : result;
-    }-*/;
+    }-*/
+    {
+	// TODO: special-handling for undefined/NullPointerException?
+	return ((String[])arrayEntries.get(array))[index];
+    }
 
-    public static native JavaScriptObject getJSOArrayValue(JavaScriptObject array, int index) /*-{
+    public static JavaScriptObject getJSOArrayValue(JavaScriptObject array, int index) /*-{
         var result = array[index];
         return (result == null || result === undefined) ? null : result;
-    }-*/;
+    }-*/
+    {
+	// TODO: special-handling for undefined/NullPointerException?
+	return ((JavaScriptObject[])arrayEntries.get(array))[index];
+    }
 
-    public static native Object getObjectArrayValue(JavaScriptObject array, int index) /*-{
+    public static Object getObjectArrayValue(JavaScriptObject array, int index) /*-{
         var result = array[index];
         return (result == null || result === undefined) ? null : result;
-    }-*/;
+    }-*/
+    {
+	// TODO: special-handling for undefined/NullPointerException?
+	return ((Object[])arrayEntries.get(array))[index];
+    }
 
-    public static native int getIntArrayValue(JavaScriptObject array, int index) /*-{
+    public static int getIntArrayValue(JavaScriptObject array, int index) /*-{
         return array[index];
-    }-*/;
+    }-*/
+    {
+	// TODO: special-handling for undefined/NullPointerException?
+	return ((int[])arrayEntries.get(array))[index];
+    }
 
-    public static native Integer getIntegerArrayValue(JavaScriptObject array, int index) /*-{
+    public static Integer getIntegerArrayValue(JavaScriptObject array, int index) /*-{
         var ret = array[index];
         return (ret === undefined || ret == null) ? null : @com.smartgwt.client.util.JSOHelper::toInteger(I)(ret);
-    }-*/;
+    }-*/
+    {
+	// TODO: special-handling for undefined/NullPointerException?
+	return ((int[])arrayEntries.get(array))[index];
+    }
 
-    public static native Float getFloatArrayValue(JavaScriptObject array, int index) /*-{
+    public static Float getFloatArrayValue(JavaScriptObject array, int index) /*-{
         var ret = array[index];
         return (ret === undefined || ret == null) ? null : @com.smartgwt.client.util.JSOHelper::toFloat(F)(ret);
-    }-*/;
+    }-*/
+    {
+	// TODO: special-handling for undefined/NullPointerException?
+	return ((float[])arrayEntries.get(array))[index];
+    }
     
-    public static native int getArrayLength(JavaScriptObject array) /*-{
+    public static int getArrayLength(JavaScriptObject array) /*-{
         return array.length;
-    }-*/;
+    }-*/
+    {
+	return Array.getLength(arrayEntries.get(array));
+    }
 
     public static int[] convertToJavaIntArray(JavaScriptObject array) {
         int length = getArrayLength(array);
@@ -857,7 +1026,10 @@ public class JSOHelper {
         for(var k in config) {
             jsObj[k] = config[k];
         }
-    }-*/;
+    }-*/
+    {
+	getAttributes(jsObj).putAll(getAttributes(config));
+    }
 
     public static void setAttribute(JavaScriptObject jsObj, String attr, Map valueMap) {
         JavaScriptObject valueJS = convertMapToJavascriptObject(valueMap);
@@ -905,13 +1077,16 @@ public class JSOHelper {
         return valueJS;
     }
 
-    public static native String[] getProperties(JavaScriptObject jsObj) /*-{
+    public static String[] getProperties(JavaScriptObject jsObj) /*-{
         var props = @com.smartgwt.client.util.JSOHelper::createJavaScriptArray()();
         for(var k in jsObj) {
             props.push(k);
         }
         return @com.smartgwt.client.util.JSOHelper::convertToJavaStringArray(Lcom/google/gwt/core/client/JavaScriptObject;)(props);
-    }-*/;
+    }-*/
+    {
+	return getAttributes(jsObj).keySet().toArray(new String[0]);
+    }
 
     public static native String getPropertiesAsString(JavaScriptObject jsObj) /*-{        
         var props = '{';
@@ -919,7 +1094,16 @@ public class JSOHelper {
             props += '\n' + k;
         }
         return props + '}';
-    }-*/;
+    }-*/
+    {
+	StringBuilder sb = new StringBuilder();
+	sb.append("{");
+	for(String attr : getAttributes(jsObj).keySet()) {
+	    sb.append("\n" + attr);
+	}
+	sb.append("}");
+	return sb.toString();
+    }
 
     /**
      * Adds all properties and methods from the propertiesObject to the destination object.
@@ -927,7 +1111,11 @@ public class JSOHelper {
      * @param destination the destination object
      * @param propertiesObject the propertiesObject 
      */
-    public static native void addProperties(JavaScriptObject destination, JavaScriptObject propertiesObject) /*-{
+    public static void addProperties(JavaScriptObject destination, JavaScriptObject propertiesObject) /*-{
         $wnd.isc.addProperties(destination, propertiesObject);
-    }-*/;
+    }-*/
+    {
+	// TODO: methods?
+	getAttributes(jsObj).putAll(getAttributes(config));
+    }
 }
