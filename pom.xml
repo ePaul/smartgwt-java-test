@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.github.epaul</groupId>
+  <artifactId>smartgwt-java-test</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>SmartGWT Java Mocks</name>
+  <description>Java mocks for SmartGWT's native methods.</description>
+  <organization>
+      <name>Paul Ebermann</name>
+      <url>https://github.com/epaul</url>
+  </organization>
+  <scm>
+      <url>https://ePaul@github.com/ePaul/smartgwt-java-test.git</url>
+  </scm>
+  <issueManagement>
+      <system>Github</system>
+      <url>https://github.com/ePaul/smartgwt-java-test/issues</url>
+  </issueManagement>
+  <dependencies>
+      <dependency>
+          <groupId>com.google.gwt</groupId>
+          <artifactId>gwt-user</artifactId>
+          <version>2.4.0</version>
+      </dependency>
+      <dependency>
+          <groupId>com.google.gwt</groupId>
+          <artifactId>gwt-dev</artifactId>
+          <version>2.2.0</version>
+      </dependency>
+  </dependencies>
+</project>
